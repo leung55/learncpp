@@ -1,0 +1,59 @@
+# 0 "/home/ed/projects/ch15quizzes/main.cpp"
+# 0 "<built-in>"
+# 0 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 0 "<command-line>" 2
+# 1 "/home/ed/projects/ch15quizzes/main.cpp"
+# 1 "/home/ed/projects/ch15quizzes/Point3d.h" 1
+
+
+
+class Vector3d;
+
+class Point3d
+{
+private:
+ double m_x{};
+ double m_y{};
+ double m_z{};
+
+public:
+ Point3d(double x, double y, double z);
+
+ void print() const;
+
+ void moveByVector(const Vector3d&);
+};
+# 2 "/home/ed/projects/ch15quizzes/main.cpp" 2
+# 1 "/home/ed/projects/ch15quizzes/Vector3d.h" 1
+
+
+
+
+
+class Vector3d
+{
+private:
+ double m_x{};
+ double m_y{};
+ double m_z{};
+
+public:
+ Vector3d(double x, double y, double z);
+
+ void print() const;
+    friend void Point3d::moveByVector(const Vector3d&);
+};
+# 3 "/home/ed/projects/ch15quizzes/main.cpp" 2
+
+int main()
+{
+ Point3d p { 1.0, 2.0, 3.0 };
+ Vector3d v { 2.0, 2.0, -3.0 };
+
+ p.print();
+ p.moveByVector(v);
+ p.print();
+
+ return 0;
+}

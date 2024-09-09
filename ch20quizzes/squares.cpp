@@ -30,16 +30,13 @@ int main () {
                 std::cin >> guess;
                 auto numMatch{std::find(nums.begin(), nums.end(),guess)};
                 if(numMatch == nums.end()) {
-                    for(int& num : nums) {
-                        num -= guess;
-                    }
                     auto smallerAbs{
-                        [](int& a, int& b) {
-                            return abs(a) < abs(b);
+                        [=](int& a, int& b) {
+                            return abs(a - guess) < abs(b - guess);
                         }
                     };
                     const auto min{std::min_element(nums.begin(),nums.end(),smallerAbs)};
-                    std::cout << guess << " is wrong! Try " << (*min) + guess << " next time.\n";
+                    std::cout << guess << " is wrong! Try " << (*min) << " next time.\n";
                     break;
                 }
                 else {

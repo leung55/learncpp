@@ -2,6 +2,9 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <functional>
+#include <algorithm>
+
 int main () {
 
     int userInt;
@@ -23,32 +26,29 @@ int main () {
             std::cout << "I generated " << numberOfNums << " square numbers. Do you know what each number is after multiplying it by " << multiplier << "?\n";
             while(numberOfNums > 0) {
                 int guess;
-                std::cout << ">";
+                std::cout << "> ";
                 std::cin >> guess;
-                bool numFound{false};
-                int minDiff{abs(nums[0] - guess)};
-                std::size_t minDiffIdx{0};
-                for(std::size_t i{0}; i < numberOfNums; ++i) {
-                    if(nums[i] == guess) {
-                        nums.erase(nums.begin()+i);
-                        numFound = true;
-                        break;
+                auto numMatch{std::find(nums.begin(), nums.end(),guess)};
+                if(numMatch == nums.end()) {
+                    for(int& num : nums) {
+                        num -= guess;
                     }
-                    if(abs(nums[i] - guess) < minDiff) {
-                        minDiff = abs(nums[i] - guess);
-                        minDiffIdx = i;
-                    }
-                }
-                if(numFound) {
-                    std::cout << "Nice! " << --numberOfNums << " number(s) left!. \n";
-                }
-                else {
-                    std::cout << guess << " is wrong! Try " << nums[minDiffIdx] << " next time.\n";
+                    auto smallerAbs{
+                        [](int& a, int& b) {
+                            return abs(a) < abs(b);
+                        }
+                    };
+                    const auto min{std::min_element(nums.begin(),nums.end(),smallerAbs)};
+                    std::cout << guess << " is wrong! Try " << (*min) + guess << " next time.\n";
                     break;
                 }
-                if(numberOfNums == 0) {
-                    std::cout << "You won!\n" ;
+                else {
+                    std::cout << "Nice! " << --numberOfNums << " number(s) left!. \n";
+                    nums.erase(numMatch);
                 }
+            }
+            if(numberOfNums == 0) {
+                std::cout << "You won!\n" ;
             }
         }
     };

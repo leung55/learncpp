@@ -21,18 +21,8 @@ public:
         fract %= 100;
     }
     FixedPoint2(double dIn)
-    : whole{static_cast<std::int16_t>(dIn)}
-    , fract{static_cast<std::int8_t>(static_cast<int>(dIn * 100) % 100)} {
-        dIn -= whole;
-        int decimal{static_cast<int>(dIn*1000) % 1000}; //isolate decimal to 3 sig figs
-        if(decimal % 10 >= 5)
-            fract = (decimal + 10) / 10;
-        else if(decimal % 10 <= -5)
-            fract = (decimal - 10) / 10;
-        whole += fract / 100;
-        fract %= 100;
-    }
-    operator double() const {
+    : FixedPoint2{static_cast<std::int16_t>(std::trunc(dIn)), static_cast<std::int8_t>(std::round(dIn * 100) - std::trunc(dIn) * 100)} {}
+    explicit operator double() const {
         return whole + static_cast<double>(fract) / 100;
     }
     friend bool testDecimal(const FixedPoint2 &fp);
@@ -40,25 +30,12 @@ public:
         return (fp1.whole == fp2.whole && fp1.fract == fp2.fract);
     }
     friend FixedPoint2 operator+(const FixedPoint2& fp1, const FixedPoint2& fp2) {
-        int newWhole{fp1.whole + fp2.whole};
-        int newFract{fp1.fract + fp2.fract};
-        //TODO - add a check for overflow / underflow in fract
-        if(newWhole > 0 != newFract > 0) {
-            if(newWhole > 0) {
-                newWhole -= 1;
-                newFract += 100;
-            }
-            else if (newWhole < 0) {
-                newWhole += 1;
-                newFract -= 100;
-            }
-        }
-        return FixedPoint2 {static_cast<std::int16_t>(newWhole), static_cast<std::int8_t>(newFract)};
+        return static_cast<double>(fp1) + static_cast<double>(fp2);
     }
-    FixedPoint2 operator-() {
+    FixedPoint2 operator-() const {
         FixedPoint2 fp = *this;
-        fp.whole = -fp.whole;
-        fp.fract = -fp.fract;
+        fp.whole = static_cast<std::int16_t>(-fp.whole);
+        fp.fract = static_cast<std::int8_t>(-fp.fract);
         return fp;
     }
 

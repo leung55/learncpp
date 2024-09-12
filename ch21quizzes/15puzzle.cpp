@@ -6,47 +6,8 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
-namespace Moves {
-    enum class moveSet {
-        w,
-        a,
-        s,
-        d,
-        maxMoves,
-    };
-    moveSet& operator++( moveSet& c ) {
-        using IntType = typename std::underlying_type<moveSet>::type;
-        c = static_cast<moveSet>( static_cast<IntType>(c) + 1 );
-        if ( c == moveSet::maxMoves )
-            c = static_cast<moveSet>(0);
-        return c;
-    }
-    moveSet& operator+=(moveSet& c, int inc) {
-        using IntType = typename std::underlying_type<moveSet>::type;
-        c = static_cast<moveSet>( static_cast<IntType>(c) + inc );
-        if ( c == moveSet::maxMoves )
-            c = static_cast<moveSet>(0);
-        return c;
-    }
-    moveSet& operator--(moveSet& c) {
-        using IntType = typename std::underlying_type<moveSet>::type;
-        if(c == moveSet::w) {
-            c = moveSet::d;
-            return c;
-        }
-        c = static_cast<moveSet>( static_cast<IntType>(c) - 1 );
-        return c;
-    }
-    moveSet operator++( moveSet &c, int ) {
-        moveSet result = c;
-        ++c;
-        return result;
-    }
-}
 
-using namespace Moves;
 class FifteenPuzzle {
-    using IntType = typename std::underlying_type<moveSet>::type;
     static constexpr int rowLen{4}, colLen{4}, gridSize{rowLen*colLen};
     std::array<int,gridSize> grid{};
     const std::array<char,4> moveChars{'w','a','s','d'};
@@ -60,10 +21,7 @@ public:
         for(std::size_t i{0}; i < grid.size(); ++i) {
             grid[i] = i + 1;
         }
-        // std::random_device rd;
-        // std::mt19937 g(rd());
         idxOf16 = 15;
-        // std::shuffle(grid.begin(), grid.end(), g);
         scramble();
         std::copy(grid.begin(), grid.end(), std::ostream_iterator<int>(std::cout, " "));
         std::cout << '\n';
@@ -81,88 +39,40 @@ public:
     void scramble() {
         int scrambleNum{Random::get(100,200)};
         for(int i{0}; i < scrambleNum; ++i) {
-            moveSet randMove;
+            std::size_t randMove;
             //blank space in corner
             if(blankTopRight() || blankTopLeft() || blankBottomLeft() || blankBottomRight()) {
-                randMove = static_cast<moveSet>(Random::get(0,1));
-                if(blankTopRight())
-                    move(moveChars[static_cast<IntType>(--randMove)]);
-                else if(blankTopLeft())
-                    move(moveChars[static_cast<IntType>(randMove)]);
-                else if(blankBottomRight())
-                    move(moveChars[static_cast<IntType>(randMove) + 2]);
-                else if(blankBottomLeft())
-                    move(moveChars[static_cast<IntType>(randMove) + 1]);
+                randMove = Random::get(0,1);
+                if(blankTopRight()) //only 'w' and 'd'
+                    move(moveChars[(randMove + 3) % 4]);
+                else if(blankTopLeft()) //only 'w' and 'a'
+                    move(moveChars[randMove]);
+                else if(blankBottomRight()) //only 's' and 'd'
+                    move(moveChars[randMove + 2]);
+                else if(blankBottomLeft()) //only 'a' and 's'
+                    move(moveChars[randMove + 1]);
                 continue;
             }
             //blank space on border but not corner
             else if(blankAtTop() || blankAtLeft() || blankAtRight() || blankAtBottom()) {
-                randMove = static_cast<moveSet>(Random::get(0,2));
-                if(blankAtTop())
-                    move(moveChars[static_cast<IntType>(--randMove)]);
-                else if(blankAtLeft())
-                    move(moveChars[static_cast<IntType>(randMove)]);
-                else if(blankAtRight())
-                    move(moveChars[static_cast<IntType>(randMove += 2)]);
-                else if(blankAtBottom())
-                    move(moveChars[static_cast<IntType>(randMove) + 1]);
+                randMove = Random::get(0,2);
+                if(blankAtTop()) //only 'w' 'a' 'd'
+                    move(moveChars[(randMove + 3) % 4]);
+                else if(blankAtLeft()) //only 'w' 'a' 's'
+                    move(moveChars[randMove]);
+                else if(blankAtRight()) //only 'w' 's' 'd'
+                    move(moveChars[(randMove + 2) % 4]);
+                else if(blankAtBottom()) //only 'a' 's' 'd'
+                    move(moveChars[randMove + 1]);
                 continue;
             }
             //blank space in middle
             else {
-                randMove = static_cast<moveSet>(Random::get(0,3));
-                move(moveChars[static_cast<IntType>(randMove)]);
+                randMove = Random::get(0,3);
+                move(moveChars[randMove]);
             }
-            
         }
     }
-    
-#ifdef MOVE_SPACE
-    void move() {
-        char userMove{getUserMove()};
-        bool moveSuccess{false};
-        switch(userMove) {
-            case 'w':
-                if(idxOf16 - rowLen > 0) {
-                    std::swap(grid[idxOf16 - rowLen], grid[idxOf16]);
-                    idxOf16 -= rowLen;
-                    moveSuccess = true;
-                }
-                break;
-            case 'a':
-                // space is not top-left corner and previous element doesn't wrap around to last element of above row
-                if(idxOf16 > 0 && ((idxOf16 - 1) % rowLen != (rowLen - 1))) {
-                    std::swap(grid[idxOf16 - 1], grid[idxOf16]);
-                    idxOf16 -= 1;
-                    moveSuccess = true;
-                }
-                break;
-            case 's': 
-                if(idxOf16 + rowLen < gridSize) {
-                    std::swap(grid[idxOf16 + rowLen], grid[idxOf16]);
-                    idxOf16 += rowLen;
-                    moveSuccess = true;
-                }
-                break;
-            case 'd': 
-                // space is not bottom-right corner and next element isn't first element of next row
-                if(idxOf16 < lastIdx && ((idxOf16 + 1) % rowLen != 0)) {
-                    std::swap(grid[idxOf16 + 1], grid[idxOf16]);
-                    idxOf16 += 1;
-                    moveSuccess = true;
-                }
-                break;
-            default:
-                std::cout << "something went wrong.\n";
-                return;
-        }
-        if(!moveSuccess) {
-            std::cout << "Can't move that way.\n";
-            return;
-        }
-        ++numMoves;
-    }
-#endif
     bool move(char userMove) {
         bool moveSuccess{false};
         switch(userMove) {
@@ -174,7 +84,6 @@ public:
                 }
                 break;
             case 'd':
-                // space is not top-left corner and previous element doesn't wrap around to last element of above row
                 if(!blankAtLeft()) {
                     std::swap(grid[idxOf16 - 1], grid[idxOf16]);
                     idxOf16 -= 1;
@@ -189,7 +98,6 @@ public:
                 }
                 break;
             case 'a': 
-                // space is not bottom-right corner and next element isn't first element of next row
                 if(!blankAtRight()) {
                     std::swap(grid[idxOf16 + 1], grid[idxOf16]);
                     idxOf16 += 1;
